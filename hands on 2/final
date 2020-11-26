@@ -1,0 +1,2023 @@
+/*
+MT2019114
+interval timer in real domain. signal is SIGALARM - 14 
+*/
+
+#include<sys/time.h>
+#include<signal.h>
+#include<stdio.h>
+#include<unistd.h>
+
+void print(){
+	printf("ITIMER_REAL\n");
+}
+
+int main(void){
+	struct itimerval val;
+	val.it_value.tv_sec = 10;
+	val.it_value.tv_usec= 10;
+	setitimer(ITIMER_REAL,&val,0);
+	signal(14,print);
+	sleep(10);
+	return 0;
+}
+/*
+MT2019114
+This timer counts down against the  user-mode  CPU  time consumed  by the process. 
+signal is SIGVTALRM - 26 
+*/
+
+#include<sys/time.h>
+#include<signal.h>
+#include<stdio.h>
+#include<unistd.h>
+
+void print(){
+	printf("ITIMER_VIRTUAL\n");s
+}
+
+int main(void){
+	struct itimerval val;
+	val.it_value.tv_sec = 10;
+	val.it_value.tv_usec= 10;
+	setitimer(ITIMER_VIRTUAL,&val,0);
+	signal(26,print);
+	while(1);
+	return 0;
+}
+/*
+MT2019114
+This  timer  counts  down  against the total (i.e., both user and system) CPU time consumed by the process. 
+signal is SIGPROF - 27 
+*/
+
+#include<sys/time.h>
+#include<signal.h>
+#include<stdio.h>
+#include<unistd.h>
+
+void print(){
+	printf("ITIMER_PROF\n");
+}
+
+int main(void){
+	struct itimerval val;
+	val.it_value.tv_sec = 10;
+	val.it_value.tv_usec= 10;
+	setitimer(ITIMER_PROF,&val,0);
+	signal(27,print);
+	while(1);		
+	return 0;
+}
+/*
+MT2019114
+getrlimit() to print the system resource limits.
+RLIMIT_NOFILE: This  specifies  a  value  one  greater  than  the  maximum file descriptor number that can be opened by this process.
+The soft  limit  is  the value that the kernel enforces for the corresponding resource.  
+The hard limit acts  as  a  ceiling  for  the  soft limit.
+*/
+
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <stdio.h>
+
+struct rlimit rl;
+
+int main(void){
+
+	getrlimit(RLIMIT_NOFILE,&rl); 
+	printf("Soft Limit on number of file descriptors is : %lld\n", (long long int)rl.rlim_cur); 
+	printf("Hard Limit on number of file descriptors is : %lld\n", (long long int)rl.rlim_max);	
+	return 0;
+}
+
+
+/*
+MT2019114
+getrlimit() to print the system resource limits.
+setrlimit() to set the system resource limit.
+RLIMIT_NOFILE: This  specifies  a  value  one  greater  than  the  maximum file descriptor number that can be opened by this process.
+*/
+
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <stdio.h>   
+
+struct rlimit rl;
+
+int main(void){
+
+	getrlimit(RLIMIT_NOFILE,&rl); 
+	printf("Soft Limit on number of file descriptors is : %lld\n", (long long int)rl.rlim_cur);
+	printf("Hard Limit on number of file descriptors is : %lld\n", (long long int)rl.rlim_max);
+
+	rl.rlim_cur = 2048;
+	setrlimit(RLIMIT_NOFILE,&rl); 
+	getrlimit(RLIMIT_NOFILE,&rl); 
+
+	printf("Soft Limit on number of file descriptors is : %lld\n", (long long int)rl.rlim_cur);
+	printf("Hard Limit on number of file descriptors is : %lld\n", (long long int)rl.rlim_max);
+
+	return 0;
+}
+
+
+/*
+MT2019114
+using time stamp counter calculating total time to execute getppid() 100 times.
+rdtsc will return clock cycles, divide by frequency to get time
+*/
+
+#include <stdio.h>
+#include <unistd.h>
+
+static __inline__ unsigned long long rdtsc(void)
+{
+  unsigned hi, lo;
+  __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+  return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+}
+
+int main(){
+  unsigned long long start, end, total;
+  start = rdtsc();
+  for(int i=0;i<100;i++){
+  	getppid();
+  }
+  end = rdtsc();
+  total = (end-start)/2.5;
+  printf("Time in nano seconds %llu\n",total);
+}
+/*
+MT2019114
+program to print system limitation
+*/
+
+#include <stdio.h>
+#include <unistd.h>
+
+int main(void) {
+    printf("Maximum length of the arguments to the exec family of functions %ld\n", sysconf(_SC_ARG_MAX));
+    printf("Maximum number of simultaneous process per user id: %ld\n", sysconf(_SC_CHILD_MAX));
+    printf("Number of clock ticks (jiffy) per second: %ld\n", sysconf(_SC_CLK_TCK));
+    printf("Maximum number of open files: %ld\n", sysconf(_SC_OPEN_MAX));
+    printf("Size of a page: %ldB\n", sysconf(_SC_PAGESIZE));
+    printf("Total number of pages in the physical memory: %ld\n", sysconf(_SC_PHYS_PAGES));
+    printf("Number of currently available pages in the physical memory: %ld\n", sysconf(_SC_AVPHYS_PAGES));
+    return 0;
+}
+/*
+MT2019114
+Run this program like gcc 06.c -lpthread
+pthread_create is creating the thread.
+pthread_join - function waits for thread specified by thread to terminate. If that thread has already terminated, then pthread_join returns immediately.
+*/  
+
+#include <pthread.h>
+#include <stdio.h>
+
+void thread_func(void){
+	printf("Thread id is %lu\n", pthread_self());
+}
+
+int main(void){
+	pthread_t thread1;
+	pthread_t thread2;
+	pthread_t thread3;
+	pthread_create ( &thread1, NULL, (void *) thread_func, NULL);
+	pthread_create ( &thread2, NULL, (void *) thread_func, NULL);
+	pthread_create ( &thread3, NULL, (void *) thread_func, NULL);
+	pthread_join(thread1,NULL);
+	pthread_join(thread2,NULL);
+	pthread_join(thread3,NULL);
+	return 0;
+}
+/*
+MT2019114
+Run this program like gcc 07.c -lpthread
+pthread_create is creating the thread.
+pthread_join - function waits for thread specified by thread to terminate. If that thread has already terminated, then pthread_join returns immediately.
+*/  
+
+#include <pthread.h>
+#include <stdio.h>
+
+void thread_func(void){
+	printf("Thread id is %lu\n", pthread_self());
+}
+
+int main(void){
+	pthread_t thread1;
+	pthread_create ( &thread1, NULL, (void *) thread_func, NULL);
+	pthread_join(thread1,NULL);
+	return 0;
+}
+/* MT2019114
+ * 8. Write a separate program using signal system call to catch the following signals.
+ * a. SIGSEGV
+ */
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
+
+void signalhandler(int signum)
+{
+    printf("Process %d received signal %d\n", getpid(), signum);
+    signal(signum, SIG_DFL);
+    kill(getpid(), signum);
+}
+
+int main()
+{
+    signal(SIGSEGV, signalhandler);
+    printf("Type kill -11 %d on another terminal\n", getpid());
+    sleep(1000);
+
+    return 0;
+}
+/* MT2019114
+ * 8. Write a separate program using signal system call to catch the following signals.
+ * b. SIGINT
+ */
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
+
+void signalhandler(int signum)
+{
+    printf("Process %d received signal %d\n", getpid(), signum);
+    signal(signum, SIG_DFL);
+    kill(getpid(), signum);
+}
+
+int main()
+{
+    signal(SIGINT, signalhandler);
+    printf("Type ctrl+c\n");
+    sleep(1000);
+
+    return 0;
+}
+/*
+MT2019114
+TEST CASES:
+SIGINT - Ctrl+C
+*/
+
+#include <signal.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+
+void my_handler(int sig);
+
+int main ( void ) {
+
+	char choice;
+	
+	printf("a.SIGSEGV\n");
+	printf("b.SIGINT\n");
+	printf("c.SIGFPE\n");
+	printf("d.SIGALRM(use alarm system call)\n");
+	printf("e.SIGALRM(use setitimer system call)\n");
+	printf("f.SIGVTALRM (use setitimer system call)\n");
+	printf("g.SIGPROF (use setitimer system call)\n");
+
+	printf("Enter the alphabet\n");
+	scanf("%c",&choice);
+
+	if (choice=='a'){
+	    signal (SIGSEGV, my_handler);
+	    
+	}
+	else if(choice=='b'){
+	    signal (SIGINT, my_handler);
+	    sleep(3);
+	}
+	
+	
+    return 0;
+}
+
+/* User-defined signal handler function */
+void my_handler (int sig) {
+    switch(sig){
+	case 11: printf("Caught SIGSEGV: segfault\n");
+       		break;
+       case 2: printf("\nCaught SIGINT: interactive attention signal, probably a ctrl+c\n");
+		      break;
+   }	
+}
+
+// MT2019114
+
+#include<stdio.h>
+#include<unistd.h>
+#include<signal.h>
+#include<sys/types.h>
+#include<sys/time.h>
+#include<stdlib.h>
+#include<sys/resource.h>
+#include <string.h>
+
+void handler(){
+    printf("catched SIGFPE\n");
+    exit(1);
+}
+int main(){
+    
+    if(signal(SIGFPE, handler) == SIG_ERR)
+		printf("error while catching SIGFPE\n");
+
+    int x = 0;
+    int y = 1/x;
+    return 0;
+}
+// MT2019114
+
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <setjmp.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void handler(int signum){
+	if(signum == SIGALRM)
+		printf("recieved SIGALRM\n");
+	
+}
+
+int main() {
+
+    struct sigaction action;
+	memset(&action, 0, sizeof(struct sigaction));
+
+	action.sa_flags = 0;
+	action.sa_handler = handler;
+
+	sigaction(SIGALRM, &action, NULL);
+
+
+	alarm(1);
+	while(1){
+		pause();
+	}
+}
+// MT2019114
+
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void handler(int signum){
+	if(signum == SIGALRM)
+		printf("Timer went off\n");
+	exit(1);
+	
+}
+
+int main() {
+
+    struct sigaction action;
+	memset(&action, 0, sizeof(struct sigaction));
+
+	action.sa_flags = 0;
+	action.sa_handler = handler;
+
+	sigaction(SIGALRM, &action, NULL);
+
+
+	struct itimerval timer;
+	timer.it_value.tv_sec = 0;
+ 	timer.it_value.tv_usec = 250000;
+	timer.it_interval.tv_sec = 0;
+	timer.it_interval.tv_usec = 0;
+    setitimer (ITIMER_REAL, &timer, NULL);
+    while(1){
+    }
+}
+
+
+
+						
+// MT2019114
+
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void handler(int nSignum){
+	if(nSignum == SIGVTALRM)
+		printf("Timer went off\n");
+}
+
+int main() {
+
+    struct sigaction action;
+	memset(&action, 0, sizeof(struct sigaction));
+
+	action.sa_flags = SA_SIGINFO;
+	action.sa_handler = handler;
+
+	sigaction(SIGVTALRM, &action, NULL);
+
+
+	struct itimerval timer;
+	timer.it_value.tv_sec = 0;
+ 	timer.it_value.tv_usec = 250000;
+	timer.it_interval.tv_sec = 0;
+	timer.it_interval.tv_usec = 250000;
+    setitimer (ITIMER_VIRTUAL, &timer, NULL);
+    while(1){
+    }
+}
+// MT2019114
+
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <setjmp.h>
+#include <stdlib.h>
+#include <sys/time.h>
+
+
+void handler(int nSignum, siginfo_t* si, void* vcontext){
+	//if(nSignum == SIGPROF)
+		printf("Signal Profiling Encountered\n");
+	exit(1);
+}
+
+int main() {
+
+    struct sigaction action;
+	memset(&action, 0, sizeof(struct sigaction));
+
+	action.sa_flags = SA_SIGINFO | SA_RESTART;
+	action.sa_sigaction = handler;
+
+	sigaction(SIGPROF, &action, NULL);
+
+	struct itimerval timeout={0};
+  	timeout.it_value.tv_sec=1;
+    setitimer (ITIMER_PROF, &timeout, NULL);
+    while(1){};
+}
+/*
+MT2019114
+first i am ignoring SIGINT and then i am setting it to defualt settings.
+*/
+
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
+
+int flag = 0;
+
+int main(void) {
+	signal(SIGINT, SIG_IGN);
+	printf("Pressing Ctrl-C has no effect\n");
+	sleep(10);
+	printf("Default resetted.. Pressing Ctrl-C has effect now.\n");
+	signal(SIGINT, SIG_DFL);
+	sleep(10);
+    	return 0;
+}
+// MT2019114
+
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <setjmp.h>
+#include <stdlib.h>
+
+
+void handler(int nSignum, siginfo_t* si, void* vcontext){
+	printf("Segmentation fault Encountered\n");
+	exit(1);
+}
+
+int main() {
+
+    struct sigaction action;
+	memset(&action, 0, sizeof(struct sigaction));
+
+	action.sa_flags = SA_SIGINFO;
+	action.sa_sigaction = handler;
+
+	sigaction(SIGSEGV, &action, NULL);
+
+
+	int* x = 0;
+  	int y = *x;
+}
+// MT2019114
+
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <setjmp.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void handler(int signum){
+	if(signum == SIGINT)
+		printf("recieved SIGINT\n");
+	
+}
+
+int main() {
+
+    struct sigaction action;
+	memset(&action, 0, sizeof(struct sigaction));
+
+	action.sa_flags = SA_SIGINFO;
+	action.sa_handler = handler;
+
+	sigaction(SIGINT, &action, NULL);
+
+	while(1)
+	    sleep(1);
+    return 0;
+}
+// MT2019114
+
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <setjmp.h>
+#include <stdlib.h>
+
+
+sigjmp_buf point;
+
+void handler(int nSignum, siginfo_t* si, void* vcontext){
+    if(nSignum == SIGFPE)
+        printf("SIGFPE Encountered\n");
+    //longjmp(point, 1);
+    exit(1);
+}
+
+int main() {
+
+    struct sigaction action;
+    memset(&action, 0, sizeof(struct sigaction));
+
+    action.sa_flags = SA_SIGINFO;
+    action.sa_sigaction = handler;
+
+    sigaction(SIGFPE, &action, NULL);
+
+
+    int i = 0;
+    int j = 2/i;
+}
+/*
+MT2019114
+Write a program to ignore a SIGINT signal then reset the default action of the SIGINT signal use sigaction system call.
+*/
+
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
+int main ( void ) {
+	struct sigaction my_action;
+	
+//Ignore SIGINT 
+
+   my_action.sa_handler = SIG_IGN;
+   sigaction (SIGINT, &my_action, NULL);
+   printf ("Ignoring SIGINT\n");
+   printf("Pressing Ctrl-C has no effect\n");
+   sleep(3); 
+
+//Default action 
+
+   my_action.sa_handler = SIG_DFL;
+   sigaction (SIGINT, &my_action, NULL);
+   printf("Default resetted.. Pressing Ctrl-C has effect now.\n");
+   sleep(3);
+   printf ("No SIGINT within 3 seconds\n"); 
+   return 0;
+}
+// MT2019114
+
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <signal.h>
+
+int main(void){
+	int i;
+	if(!fork()) {
+		i=getppid();
+		printf("Child's parent id before orphan: %d\n",getppid());
+		kill(SIGKILL,i);
+		printf("Child's parent id after orphan: %d\n",getppid() ); 
+	}
+	return 0;
+}
+/*
+MT2019114
+to catch sigstop
+*/
+
+#include <unistd.h>
+#include <stdio.h>
+#include <signal.h>
+
+void my_handler () {
+	 printf ("I got SIGSTOP\n");
+}
+
+int main ( void ) {
+	//Catch SIGSTOP
+	printf("pid: %d\n", getpid());
+	signal(SIGSTOP,my_handler);
+    	printf ("Catching SIGSTOP\n");
+    	getchar();
+	return 0;
+
+}
+/*
+MT2019114
+to kill particular pid
+*/
+
+#include <sys/types.h>
+#include <signal.h>
+#include <stdio.h>
+
+int main ( void ) {
+	int p;
+	printf("Enter pid: ");
+ 	scanf("%d", &p);
+	kill(p,SIGKILL);
+	return 0;
+}
+/*
+MT2019114
+creating a pipe, writing to pipe using fd[1], reading from pipe using fd[0], printing to monitor.
+*/
+
+#include <unistd.h>
+#include <fcntl.h>
+
+int main (void){
+	int fd[2];
+	pipe(fd);
+	char buf[11] = "Sravya";
+	char out[11]; 
+	write(fd[1],&buf,sizeof(buf));
+	read(fd[0],&out,sizeof(out));
+	write(1,&out,sizeof(out));
+	write(1,"\n",1);
+	return 0;
+}
+/*
+MT2019114
+parent is writing through command line argument and child is reading 
+*/
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+
+int main (int argc, char **argv){
+	int fd[2];
+	pipe(fd);
+	char buf;
+	if (!fork()){
+		close(fd[1]); // close unused write end
+		while (read(fd[0],&buf,1)>0)
+			write(1,&buf,1);
+		write(1,"\n",1);
+		close(fd[0]);
+	}
+	else {
+		close(fd[0]); // close unused read end
+		write(fd[1],argv[1],strlen(argv[1]));
+		close(fd[1]);
+	}
+	return 0;
+}
+/*
+MT2019114
+2 way communication using pipe sequence is as follows
+child is writing to pipe0
+parent is reading from pipe0
+parent is writing to pipe1
+child is reading from pipe1
+*/
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+
+int main (void) {
+	int fd0[2],fd1[2];
+	pipe(fd0);
+	pipe(fd1);
+	char read_child[20];
+	char write_child[20] = "hello how are you?";
+	char read_parent[20];
+	char write_parent[20] = "I am fine";
+	
+	if(!fork()){
+		close(fd0[0]); // close read end of pipe0
+		close(fd1[1]); // close write end of pipe1
+		
+		write(1,"Child: Writing to pipe0\n",strlen("Child: Writing to pipe0\n"));
+		write(fd0[1],&write_child,sizeof(write_child));// child will write
+
+		read(fd1[0],&read_child,sizeof(read_child)); // child will read
+		write(1,"Child: Reading from pipe1, ",strlen("Child: Reading from pipe1, "));
+		write(1,&read_child,sizeof(read_child)); 
+		write(1,"\n",1);
+
+		close(fd0[1]);
+		close(fd1[0]);
+	}
+	else{
+		close(fd0[1]); // close write end of pipe0
+		close(fd1[0]); // close read end of pipe1
+
+		read(fd0[0],&read_parent,sizeof(read_parent));// parent will read
+		write(1,"Parent: Reading from pipe0, ",strlen("Parent: Reading from pipe0, "));
+		write(1,&read_parent,sizeof(read_parent));
+		write(1,"\n",1);
+
+		write(1,"Parent: Writing to pipe1\n",strlen("Parent: Writing to pipe1\n"));
+		write(fd1[1],&write_parent,sizeof(write_parent));// parent will write
+		
+		close(fd1[1]);
+		close(fd0[0]);
+		
+	}
+	return 0;
+}
+/*
+MT2019114
+2 way communication using pipe sequence is as follows
+parent is writing to pipe0
+child is reading from pipe0
+child is writing to pipe1
+parent is reading from pipe1
+*/
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+
+int main (void) {
+	int fd0[2],fd1[2];
+	pipe(fd0);
+	pipe(fd1);
+	char read_child[20];
+	char write_child[20] = "I am fine";
+	char read_parent[20];
+	char write_parent[20] = "hello how are you?";
+	
+	if(!fork()){
+		close(fd0[1]); // close write end of pipe0
+		close(fd1[0]); // close read end of pipe1
+		
+		read(fd0[0],&read_child,sizeof(read_child)); // child will read
+		write(1,"Child: Reading from pipe0, ",strlen("Child: Reading from pipe0, "));
+		write(1,&read_child,sizeof(read_child)); 
+		write(1,"\n",1);
+
+		write(1,"Child: Writing to pipe1\n",strlen("Child: Writing to pipe1\n"));
+		write(fd1[1],&write_child,sizeof(write_child));// child will write
+
+		close(fd0[0]);
+		close(fd1[1]);
+	}
+	else{
+		close(fd0[0]); // close read end of pipe0
+		close(fd1[1]); // close write end of pipe1
+
+		write(1,"Parent: Writing to pipe0\n",strlen("Parent: Writing to pipe0\n"));
+		write(fd0[1],&write_parent,sizeof(write_parent));// parent will write
+
+		read(fd1[0],&read_parent,sizeof(read_parent));// parent will read
+		write(1,"Parent: Reading from pipe1, ",strlen("Parent: Reading from pipe1, "));
+		write(1,&read_parent,sizeof(read_parent));
+		write(1,"\n",1);
+		
+		close(fd1[0]);
+		close(fd0[1]);
+		
+	}
+	return 0;
+}
+/*
+MT2019114
+ls -l | wc (use dup)
+parent is writing ls -l to pipe by closing the stdout and child is reading using pipe by closing the stdin and display the output on monitor
+*/
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+
+int main (int argc, char **argv){
+	int fd[2];
+	pipe(fd);
+	char buf;
+	if (!fork()){
+		close(fd[1]); // close unused write end
+		close(0);//close stdin
+		dup(fd[0]);
+		execlp ("wc","wc", (char *)NULL);		
+		write(1,"\n",1);
+		close(fd[0]);
+	}
+	else {
+		close(fd[0]); // close unused read end
+		close(1); // close stdout
+		dup(fd[1]);
+		execlp ("ls","ls","-l", (char *)NULL);
+		close(fd[1]);
+	}
+	return 0;
+}
+/*
+MT2019114
+ls -l | wc (use dup2)
+parent is writing ls -l to pipe by closing the stdout and child is reading using pipe by closing the stdin and display the output on monitor 
+*/
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+
+int main (int argc, char **argv){
+	int fd[2];
+	pipe(fd);
+	char buf;
+	if (!fork()){
+		close(fd[1]); // close unused write end
+		dup2(fd[0],0);
+		execlp ("wc","wc", (char *)NULL);		
+		write(1,"\n",1);
+		close(fd[0]);
+	}
+	else {
+		close(fd[0]); // close unused read end
+		dup2(fd[1],1);
+		execlp ("ls","ls","-l", (char *)NULL);
+		close(fd[1]);
+	}
+	return 0;
+}
+/*
+MT2019114
+ls -l | wc (use fcntl)
+parent is writing ls -l to pipe by closing the stdout and child is reading using pipe by closing the stdin and display the output on monitor 
+*/
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+
+int main (int argc, char **argv){
+	int fd[2];
+	pipe(fd);
+	char buf;
+	if (!fork()){
+		close(fd[1]); // close unused write end
+		close(0);// close stdin
+		fcntl(fd[0],F_DUPFD,0);
+		execlp ("wc","wc", (char *)NULL);		
+		write(1,"\n",1);
+		close(fd[0]);
+	}
+	else {
+		close(fd[0]); // close unused read end
+		close(1);
+		fcntl(fd[1],F_DUPFD,1);
+		execlp ("ls","ls","-l", (char *)NULL);
+		close(fd[1]);
+	}
+	return 0;
+}
+/*
+MT2019114
+ls -Rl| grep ^d| wc (use dup2)
+*/
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+
+int main (void) {
+	int fd0[2],fd1[2];	
+	pipe(fd0);
+	pipe(fd1);
+	
+	if(!fork()){
+
+		close(fd0[0]); // close read end of pipe0
+		close(fd1[1]); // close write end of pipe1
+		close(fd1[0]);
+		dup2(fd0[1],1);
+		execlp ("ls","ls","-Rl", (char *)NULL);
+
+	}
+	else{
+		if (!fork()){
+
+		close(fd0[1]); // close write end of pipe0
+		close(fd1[0]); // close read end of pipe1
+		dup2(fd0[0],0);
+		dup2(fd1[1],1);
+		execlp("grep","grep","^d",(char *)NULL);
+		close(fd0[0]);
+		close(fd1[1]);
+
+		}
+		else {	
+			close(fd0[0]); // close read end of pipe0
+			close(fd1[1]); // close write end of pipe1
+			close(fd0[1]);
+			dup2(fd1[0],0);
+			execlp("wc","wc",(char *)NULL);
+			write(1,"\n",1);
+			close(fd1[0]);		
+		}	
+	}
+	return 0;
+}
+#MT2019114
+#mknod command to create fifo
+
+mknod myfifo p
+#MT2019114
+#mkfifo command to create fifo
+
+mkfifo myfifo
+/*
+MT2019114
+fifo using mknod system call
+*/
+
+#include <sys/types.h>       
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main(void){
+	mknod("fifo1",O_EXCL| 0744,0);
+	return 0;
+}
+/*
+MT2019114
+mkfifo using system call
+*/
+#include <string.h> 
+#include <fcntl.h>           
+#include <sys/stat.h>
+  
+int main() 
+{ 
+    char * myfifo = "myfifo";  
+    mkfifo(myfifo, 0666);  
+} 
+/*
+MT2019114
+Receive program one way communication using fifo.
+*/
+
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<stdio.h>
+
+int main(void){
+   
+   char buf[100];
+   int fd = open("fifo1",O_RDONLY);       
+   read(fd,&buf,sizeof(buf));
+   printf("message: %s\n",buf);
+   close(fd);
+   return 0;
+
+}
+/*
+MT2019114
+Send program one way communication using fifo.
+*/
+
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<stdio.h>
+
+int main(void){
+   
+   char buf[100];
+   int fd = open("fifo1",O_RDWR);
+   printf("Enter the message: \n");
+   scanf(" %[^\n]",buf);    
+   write(fd,&buf,sizeof(buf));
+   close(fd);
+   return 0;
+
+}
+/*
+MT2019114
+Receive program 2 way communication using fifo
+*/
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main(void){
+
+   int fd0, fd1;
+   char buf0[50],buf1[50];
+   fd0=open("fifo0",O_RDONLY); // read from the pipe0
+   fd1=open("fifo1",O_WRONLY); // write to pipe1
+   read(fd0,&buf0,sizeof(buf0)); 
+   printf("Message from fifo0: %s\n",buf0);
+   printf("Enter the message: ");	
+   scanf(" %[^\n]",buf1);
+   write(fd1,&buf1,sizeof(buf1));
+   return 0;	
+}
+/*
+MT2019114
+Send program 2 way communication using fifo
+*/
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main(void){
+   
+   int fd0, fd1;
+   char buf0[50],buf1[50];
+   fd0=open("fifo0",O_WRONLY);
+   fd1=open("fifo1",O_RDONLY); 
+   printf("Enter the message: ");
+   scanf(" %[^\n]",buf0);
+   write(fd0,&buf0,sizeof(buf0)); // writing to fifo0 write only mode
+   read(fd1,&buf1,sizeof(buf1)); // reading from fifo1 readonly mode 
+   printf("message from fifo1: %s\n",buf1);
+   return 0;
+
+}
+/*
+MT2019114
+Receive program one way communication using fifo.
+using select to wait for particular time if data is not given within that time it terminates.
+*/
+
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<time.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<stdio.h>
+
+int main(void){
+
+	char buf[100];
+	int fd = open("fifo1",O_RDONLY); 
+	
+	fd_set rfd;
+	struct timeval t;
+	int ret;
+	
+	FD_ZERO(&rfd);
+	FD_SET(fd,&rfd);
+	
+	t.tv_sec = 10;
+	t.tv_usec = 0;
+
+	ret = select(fd+1,&rfd,NULL,NULL,&t);
+	
+	if (ret){
+		read(fd,&buf,sizeof(buf));
+    		printf("message: %s\n",buf);
+	}
+	else
+		printf("No Data within 10s\n");
+    
+    close(fd);
+   return 0;
+
+}
+/*
+MT2019114
+Send program one way communication using fifo.
+*/
+
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<stdio.h>
+
+int main(void){
+   
+   char buf[100];
+   int fd = open("fifo1",O_RDWR);
+   printf("Enter the message: \n");
+   scanf(" %[^\n]",buf);    
+   write(fd,&buf,sizeof(buf));
+   close(fd);
+   return 0;
+
+}
+/*
+MT2019114
+program to print the maximum number of files (sysconf) can be opened within a process and size of a pipe (pathconf).
+*/
+
+#include <unistd.h>
+#include <stdio.h>
+
+int main(void){
+
+	long size_pipe, max_files;
+	size_pipe=pathconf(".",_PC_PIPE_BUF);
+	max_files=sysconf(_SC_OPEN_MAX);
+	printf("Maximum number of files that can be opened within a process: %ld\nSize of Pipe: %ldB\n",max_files,size_pipe);
+	return 0;
+
+}
+/*
+MT2019114
+Creating message queue using msgget and msgkey and then printing the values of msgkey and msgqid
+*/
+
+#include<sys/msg.h>
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<unistd.h>
+#include<stdio.h>
+
+int main(void){
+
+  int msgqid;
+  key_t msgkey;
+  msgkey = ftok(".",'a');
+  msgqid = msgget(msgkey, IPC_CREAT | IPC_EXCL|0744);
+  printf("key value is: %d \n", msgkey);
+  printf("key value in hex is: 0x%0x \n",msgkey);
+  printf("Mesage queue id is: %d\n",msgqid);
+
+  return 0;
+}
+/*
+MT2019114
+Creating message queue and printing infomration about message queues
+*/
+
+#include <fcntl.h>
+#include <unistd.h>          
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <time.h>
+
+struct ipc_perm msg_perm;
+struct msqid_ds mds;
+
+int main(void){
+
+	key_t msgkey;
+	int msgqid;
+	
+	msgkey=ftok(".",'a');
+	msgqid=msgget(msgkey,0);
+	msgctl(msgqid,IPC_STAT,&mds); //ipc_stat for statistics
+	
+	printf("Permission: %03o\n",mds.msg_perm.mode & 0777);
+	printf("UID: %d\n",msg_perm.uid);
+	printf("GID: %d\n",msg_perm.gid);
+	printf("Last time message was sent: %s\n",ctime(&mds.msg_stime));
+	printf("Last time message was recieved: %s\n",ctime(&mds.msg_rtime));
+	printf("Last time of change in queue: %s\n",ctime(&mds.msg_ctime));
+	//printf("Size of queue: \n",  ); //========LEFT=============
+	printf("Number of messages in queue: %lu\n",mds.msg_qnum);
+	printf("Max number of bytes allowed in queue: %lu\n",mds.msg_qbytes);
+	printf("Pid of last message that was sent: %d\n",mds.msg_lspid);
+	printf("Pid of last message that was recieved: %d\n",mds.msg_lrpid);
+	
+	return 0;
+}
+/*
+MT2019114
+Sending message to message queue.
+msgsnd()
+*/
+
+#include<unistd.h>
+#include<stdio.h>
+#include<sys/msg.h>
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<string.h>
+
+int main(void){
+
+	int msgqid, size;
+	key_t msgkey;
+	struct msg{
+		long int mtype;
+		char message[80];
+	}ms;
+
+  	msgkey = ftok(".",'a');
+  	msgqid = msgget(msgkey,0);
+	printf("Enter the message type: ");
+	scanf("%ld", &ms.mtype);
+	printf("Enter the message text: ");
+	scanf(" %[^\n]", ms.message);
+	size = strlen(ms.message);
+	msgsnd(msgqid,&ms, size+1,0);
+
+ 	return 0;
+}
+/*
+MT2019114
+Receive the msg from message queue will wait till message is received and once message is received it is deleted from message queue.
+msgrcv(,,,,0)
+*/
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>         
+#include <stdio.h>
+
+struct msgbuf {
+	long mtype;
+	char mtext [1024];
+};
+
+int main(void){
+
+	struct msgbuf buf;
+	int ret,msgkey,msgqid;
+	msgkey=ftok(".",'a');
+	msgqid=msgget(msgkey,0);
+	printf("Enter message type: ");
+	scanf("%ld",&buf.mtype);
+	ret=msgrcv(msgqid, &buf,sizeof(buf.mtext),buf.mtype, 0);
+	printf("Message from queue: %s\n",buf.mtext);
+	
+	return 0;
+}
+/*
+MT2019114
+Receive the msg from message queue will not wait if message is not availabe and once message is received it is deleted from message queue.
+msgrcv(,,,,IPC_NOWAIT)
+*/
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>         
+#include <stdio.h>
+
+struct msgbuf {
+	long mtype;
+	char mtext [1024];
+};
+
+int main(void){
+
+	struct msgbuf buf;
+	int ret,msgkey,msgqid;
+	msgkey=ftok(".",'a');
+	msgqid=msgget(msgkey,0);
+	printf("Enter message type: ");
+	scanf("%ld",&buf.mtype);
+	ret=msgrcv(msgqid, &buf,sizeof(buf.mtext),buf.mtype, IPC_NOWAIT);
+	printf("Message from queue: %s\n",buf.mtext);
+	
+	return 0;
+}
+/*
+MT2019114
+Changing the message queue permission using msg_perm mode variable.
+*/
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <fcntl.h>
+#include <unistd.h> 
+#include <stdlib.h>         
+#include <stdio.h>
+
+
+struct ipc_perm msg_perm;
+struct msqid_ds mds;
+
+int main()
+{
+	key_t msgkey;
+	int msgqid;
+	
+	msgkey=ftok(".",'a');
+	msgqid=msgget(msgkey,0);
+	msgctl(msgqid,IPC_STAT,&mds); //ipc_stat for statistics
+	printf("Current Permission: %03o\n",mds.msg_perm.mode & 0777);
+	mds.msg_perm.mode=0666;
+	printf("Updated Permission: %03o\n",mds.msg_perm.mode & 0777);
+}
+/*
+MT2019114
+Remove the message queue using msgctl().
+*/
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <fcntl.h>
+#include <unistd.h> 
+#include <stdlib.h>         
+#include <stdio.h>
+
+int main(void){
+
+	int msgkey,msgqid;
+	msgkey=ftok(".",'a');
+	msgqid=msgget(msgkey,0);
+	msgctl(msgqid, IPC_RMID, NULL);
+}
+
+
+/*
+MT2019114
+sending data through shared memeory
+shmget: used to create a shared memory segment.
+shmat: used to attach the created shared memory segment onto a process address space. A pointer is returned on the successful execution of the system call and the process can read or write to the segment using the pointer. 
+*/
+
+#include<stdio.h>
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<sys/shm.h>
+
+int main(void) {
+
+  int shmkey, shmid;
+  char *data;
+  
+  shmkey = ftok(".",'r');
+  shmid = shmget(shmkey,1024,IPC_CREAT|0744);
+  printf("Shared memory I'd: %d\n",shmid);
+  data = shmat(shmid,0,0);
+  printf("Enter the text: ");
+  scanf(" %[^\n]",data); // as its already pointer no need of &  and scanned value goes to pointed data.
+  return 0; 
+
+}
+/*
+MT2019114
+sending data through shared memeory
+shmget: used to create a shared memory segment.
+shmat: used to attach the created shared memory segment onto a process address space. A pointer is returned on the successful execution of the system call and the process can read or write to the segment using the pointer. 
+when we use RDONLY flag data cannot be overwritten. it returns segmentation fault.
+*/
+
+#include<stdio.h>
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<sys/shm.h>
+
+int main(void) {
+
+  int shmkey, shmid;
+  char *data;
+  
+  shmkey = ftok(".",'r');
+  shmid = shmget(shmkey,1024,IPC_CREAT|0744);
+  printf("Shared memory I'd: %d\n",shmid);
+  data = shmat(shmid,0,SHM_RDONLY);
+  printf("Enter the text: ");
+  scanf(" %[^\n]",data); // as its already pointer no need of &  and scanned value goes to pointed data.
+  return 0; 
+
+}
+/*
+MT2019114
+sending data through shared memeory
+shmget: used to create a shared memory segment.
+shmat: used to attach the created shared memory segment onto a process address space. A pointer is returned on the successful execution of the system call and the process can read or write to the segment using the pointer. 
+shmdt: After a shared memory is detached, it cannot be used.But it is still there. 
+*/
+
+#include<stdio.h>
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<sys/shm.h>
+
+int main(void) {
+
+  int shmkey, shmid;
+  char *data;
+  
+  shmkey = ftok(".",'r');
+  shmid = shmget(shmkey,1024,0);
+  printf("Shared memory before detaching I'd: %d\n",shmid);
+  shmdt(0);
+  shmid = shmget(shmkey,1024,0);
+  printf("Shared memory after detching I'd: %d\n",shmid);
+  return 0; 
+
+}
+/*
+MT2019114
+sending data through shared memeory
+shmget: used to create a shared memory segment.
+shmat: used to attach the created shared memory segment onto a process address space. A pointer is returned on the successful execution of the system call and the process can read or write to the segment using the pointer. 
+shmctl: This permanently removes it. 
+*/
+
+#include<stdio.h>
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<sys/shm.h>
+
+int main(void) {
+
+  int shmkey, shmid;
+  char *data;
+  
+  shmkey = ftok(".",'r');
+  shmid = shmget(shmkey,1024,0);
+  printf("Shared memory before removing I'd: %d\n",shmid);
+  shmctl(shmid,IPC_RMID,NULL);
+  shmid = shmget(shmkey,1024,0);
+  printf("Shared memory after removing I'd: %d\n",shmid);
+  return 0; 
+
+}
+/*
+MT2019114
+receiving data from shared memeory
+shmget: used to create a shared memory segment. (we pass 0 as last argument as wea are reading from shared memory)
+shmat: used to attach the created shared memory segment onto a process address space. A pointer is returned on the successful execution of the system call and the process can read or write to the segment using the pointer. 
+*/
+
+#include<stdio.h>
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<sys/shm.h>
+
+int main(void) {
+   int shmkey,shmid;
+   char *data; // pointer
+   shmkey = ftok(".",'r');
+   shmid = shmget(shmkey,1024,0);
+   data = shmat(shmid,0,0);
+   printf("Text from shared memory: %s\n",data);
+   return 0;
+}
+/*
+MT2019114
+creating binary semaphore and initializing value of semaphore
+semget: will return semphore identifier
+semctl: will define control operations. 1 = binary semphore, >1 couting semaphore
+check initialized value using 'ipcs -s -i semid'
+*/
+
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<sys/sem.h>
+#include<stdio.h>
+
+union semun{
+   int val; // value for SETVAL
+   struct semid_ds *buf; // buffer for IPC_STAT, IPC_SET
+   unsigned short int *array; // array for GETALL, SETALL
+ };
+
+int main(void){
+
+    union semun arg;
+    int semkey, semid;
+    semkey = ftok(".",'b');
+    semid = semget (semkey,1,IPC_CREAT | 0744);
+    arg.val = 1;
+    /* 1 for binary else >1 for counting semaphore */
+    semctl(semid,0,SETVAL,arg);
+    return 0;
+
+}
+/*
+MT2019114
+creating counting semaphore and initializing value of semaphore
+semget: will return semphore identifier
+semctl: will define control operations. 1 = binary semphore, >1 counting semaphore
+check initialized value using 'ipcs -s -i semid'
+*/
+
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<sys/sem.h>
+#include<stdio.h>
+
+union semun{
+   int val; // value for SETVAL
+   struct semid_ds *buf; // buffer for IPC_STAT, IPC_SET
+   unsigned short int *array; // array for GETALL, SETALL
+ };
+
+int main(void){
+
+    union semun arg;
+    int semkey, semid;
+    semkey = ftok(".",'c');
+    semid = semget (semkey,1,IPC_CREAT | 0744);
+    arg.val = 2;
+    /* 1 for binary else >1 for counting semaphore */
+    semctl(semid,0,SETVAL,arg);
+    return 0;
+
+}
+/*
+MT2019114
+ticket reservation example using semaphore to protect shared memory from concurrent write access.
+*/
+
+#include<sys/ipc.h>
+#include<sys/sem.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+int main (void){
+	int semkeyb,semidb;
+	struct{
+		int tno;
+	}db;
+	
+	int fd = open("database",O_RDWR);
+	read(fd,&db,sizeof(db));	
+	printf("Current quantity of tickets booked : %d \n",db.tno);
+
+	semkeyb = ftok(".",'b');
+
+    	struct sembuf bufb = {0,-1,0};
+	semidb = semget(semkeyb,1,0);
+
+    	printf("Before entering into the critical section...\n");
+
+    	semop(semidb,&bufb,1);
+    	printf("Inside the critical section...\n");		
+	db.tno++;
+	lseek(fd,0,SEEK_SET);
+	write(fd,&db,sizeof(db));
+	printf("Enter to unlock");
+	getchar();
+	
+	bufb.sem_op = 1;
+    	semop(semidb,&bufb,1);	
+	printf("Ticket is booked\n");
+
+	close(fd);
+	
+	return 0;
+}
+/*
+MT2019114
+ticket reservation example using semaphore to protect multiple pseudo resources ( may be two) using counting semaphore.
+*/
+
+#include<sys/ipc.h>
+#include<sys/sem.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<stdio.h>
+#include<stdlib.h>
+
+struct{
+	int tno;
+}db;
+
+int main (void){
+	int semkeyb,semidb,ret;
+	fd_set rfd;
+	struct timeval t;
+
+	
+	FD_ZERO(&rfd);
+	FD_SET(0,&rfd);
+
+	int fd = open("database",O_RDWR);
+	read(fd,&db,sizeof(db));	
+	printf("Current quantity of tickets booked : %d \n",db.tno);
+
+	semkeyb = ftok(".",'c');
+
+    	struct sembuf bufb = {0,-1,0};
+	semidb = semget(semkeyb,1,0);
+
+    	printf("Before entering into the critical section...\n");
+
+    	semop(semidb,&bufb,1);
+    	printf("Inside the critical section...\n");		
+	db.tno++;
+	lseek(fd,0,SEEK_SET);
+	write(fd,&db,sizeof(db));
+	close(fd);
+			
+	t.tv_sec = 10;
+	t.tv_usec = 0;
+	ret = select(1,&rfd,NULL,NULL,&t);
+	
+	if (ret){
+		printf("Ticket is booked\n");
+	}
+	else{
+		printf("Ticket is not booked\n");
+		fd = open("database",O_RDWR);
+		read(fd,&db,sizeof(db));
+		db.tno--;
+		lseek(fd,0,SEEK_SET);
+		write(fd,&db,sizeof(db));
+		close(fd);
+		bufb.sem_op = 1;
+    		semop(semidb,&bufb,1);
+    	}	
+	return 0;
+}
+/*
+MT2019114
+database to store ticket number
+*/
+#include<unistd.h>
+#include<fcntl.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<stdio.h>
+#include<stdlib.h>
+
+
+int main (void){
+	int fd = open("database",O_CREAT|O_RDWR,0744);
+	struct{
+		int tno;
+		}db;
+	
+	db.tno = 0;
+	write(fd,&db,sizeof(db));
+	close(fd);
+	fd = open("database",O_RDONLY);
+	read(fd,&db,sizeof(db));
+	printf("Total tickets booked : %d\n",db.tno);
+	close(fd);
+	return 0;
+}
+/*
+MT2019114
+remove the created semaphore.
+*/
+
+#include<sys/ipc.h>
+#include<sys/types.h>
+#include<sys/sem.h>
+#include<stdio.h>
+
+
+int main(void){
+
+    int semkeyc, semidc,semkeyb, semidb;
+    semkeyc = ftok(".",'c');
+    semkeyb = ftok(".",'b');
+    semidc = semget (semkeyc,1,0);
+    semidb = semget (semkeyb,1,0);
+    semctl(semidc,0,IPC_RMID,0);
+    semctl(semidb,0,IPC_RMID,0);
+    return 0;
+}
+/*
+MT2019114
+Client side:
+socket->connect->send/recv->close
+*/
+
+#include <string.h> 
+#include <sys/socket.h> 
+#include <unistd.h> 
+#include <arpa/inet.h> 
+#include <stdio.h> 
+ 
+int main(int argc, char* argv[]) 
+{ 
+    int sock; 
+    struct sockaddr_in server; 
+    char server_reply[50]; 
+     
+    sock = socket(AF_INET, SOCK_STREAM, 0); 
+    if (sock == -1) { 
+        printf("Could not create socket"); 
+    } 
+    
+    server.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    server.sin_family = AF_INET; 
+    server.sin_port = htons(8880); 
+   
+    if (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0)
+        perror("connect failed. Error"); 
+    
+    if (send(sock,"hello server.\n",strlen("hello server.\n"),0) < 0)  
+        printf("Send failed"); 
+ 
+    if (recv(sock, &server_reply, sizeof(server_reply), 0) < 0) 
+        printf("recv failed");  
+    
+    printf("Message from Server: %s\n",server_reply);
+    close(sock); 
+    return 0; 
+} 
+/*
+MT2019114
+Server side:
+socket->bind->listen->accept->recv/send->close
+*/
+#include <string.h> 
+#include <sys/socket.h> 
+#include <unistd.h> 
+#include <arpa/inet.h> 
+#include <stdio.h>  
+   
+int main(void) {
+ 
+    int socket_desc, client_sock, c; 
+    struct sockaddr_in server, client; 
+    char buf[100]; 
+  
+    socket_desc = socket(AF_INET, SOCK_STREAM, 0); 
+    if (socket_desc == -1) { 
+        printf("Could not create socket"); 
+    } 
+  
+    server.sin_family = AF_INET; 
+    server.sin_addr.s_addr = INADDR_ANY; 
+    server.sin_port = htons(8880); 
+   
+    if (bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) < 0) 
+        perror("bind failed. Error"); 
+   
+ 
+    listen(socket_desc, 3);  
+    c = sizeof(struct sockaddr_in); 
+  
+    client_sock = accept(socket_desc, (struct sockaddr*)&client, (socklen_t*)&c); 
+  
+    if (client_sock < 0)
+        perror("accept failed"); 
+ 
+    recv(client_sock, &buf, sizeof(buf), 0);
+    printf("Message from client: %s\n",buf);
+    send(client_sock,"hello client.\n",strlen("hello client.\n"),0);
+    close(socket_desc);
+    close(client_sock); 
+    return 0; 
+} 
+  
+
+/*
+MT2019114
+Client side:
+socket->connect->send/recv->close
+*/
+
+#include <string.h> 
+#include <sys/socket.h> 
+#include <unistd.h> 
+#include <arpa/inet.h> 
+#include <stdio.h> 
+ 
+int main(int argc, char* argv[]) 
+{ 
+    int sock; 
+    struct sockaddr_in server; 
+    char server_reply[50]; 
+     
+    sock = socket(AF_INET, SOCK_STREAM, 0); 
+    if (sock == -1) { 
+        printf("Could not create socket"); 
+    } 
+    
+    server.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    server.sin_family = AF_INET; 
+    server.sin_port = htons(8880); 
+   
+    if (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0)
+        perror("connect failed. Error"); 
+    
+    if (send(sock,"hello server.\n",strlen("hello server.\n"),0) < 0)  
+        printf("Send failed"); 
+ 
+    if (recv(sock, &server_reply, sizeof(server_reply), 0) < 0) 
+        printf("recv failed");  
+    
+    printf("Message from Server: %s\n",server_reply);
+    close(sock); 
+    return 0; 
+} 
+/*
+MT2019114
+Server side: concurrent server using fork()
+socket->bind->listen->accept->recv/send->close
+*/
+#include <string.h> 
+#include <sys/socket.h> 
+#include <unistd.h> 
+#include <arpa/inet.h> 
+#include <stdio.h> 
+#include <stdlib.h> 
+   
+int main(void) {
+ 
+    int socket_desc, client_sock, c; 
+    struct sockaddr_in server, client; 
+    char buf[100]; 
+  
+    socket_desc = socket(AF_INET, SOCK_STREAM, 0); 
+    if (socket_desc == -1) { 
+        printf("Could not create socket"); 
+    } 
+  
+    server.sin_family = AF_INET; 
+    server.sin_addr.s_addr = INADDR_ANY; 
+    server.sin_port = htons(8880); 
+   
+    if (bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) < 0) 
+        perror("bind failed. Error"); 
+   
+ 
+    listen(socket_desc, 3);  
+    c = sizeof(struct sockaddr_in); 
+  
+    while (1){
+
+	    client_sock = accept(socket_desc, (struct sockaddr*)&client, (socklen_t*)&c); 
+	  
+	    if (!fork()){
+		    close(socket_desc);
+		    recv(client_sock, &buf, sizeof(buf), 0);
+		    printf("Message from client: %s\n",buf);
+		    send(client_sock,"hello client.\n",strlen("hello client.\n"),0);
+		    exit(0);
+	    }
+	    else
+	    	close(client_sock);
+    }
+    return 0; 
+} 
+  
+
+/*
+MT2019114
+Client side:
+socket->connect->send/recv->close
+*/
+
+#include <string.h> 
+#include <sys/socket.h> 
+#include <unistd.h> 
+#include <arpa/inet.h> 
+#include <stdio.h> 
+ 
+int main(int argc, char* argv[]) 
+{ 
+    int sock; 
+    struct sockaddr_in server; 
+    char server_reply[50]; 
+     
+    sock = socket(AF_INET, SOCK_STREAM, 0); 
+    if (sock == -1) { 
+        printf("Could not create socket"); 
+    } 
+    
+    server.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    server.sin_family = AF_INET; 
+    server.sin_port = htons(8880); 
+   
+    if (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0)
+        perror("connect failed. Error"); 
+    
+    if (send(sock,"hello server.\n",strlen("hello server.\n"),0) < 0)  
+        printf("Send failed"); 
+ 
+    if (recv(sock, &server_reply, sizeof(server_reply), 0) < 0) 
+        printf("recv failed");  
+    
+    printf("Message from Server: %s\n",server_reply);
+    close(sock); 
+    return 0; 
+} 
+/*
+MT2019114
+Server side: concurrent server using pthread
+socket->bind->listen->accept->recv/send->close
+*/
+#include <string.h> 
+#include <sys/socket.h> 
+#include <unistd.h> 
+#include <arpa/inet.h> 
+#include <stdio.h> 
+#include <stdlib.h>
+#include <pthread.h> 
+   
+void *socketThread(void *);
+
+int main(void) {
+ 
+    int socket_desc, client_sock, c, *new_sock; 
+    struct sockaddr_in server, client; 
+    char buf[100]; 
+  
+    socket_desc = socket(AF_INET, SOCK_STREAM, 0); 
+    if (socket_desc == -1) { 
+        printf("Could not create socket"); 
+    } 
+  
+    server.sin_family = AF_INET; 
+    server.sin_addr.s_addr = INADDR_ANY; 
+    server.sin_port = htons(8880); 
+   
+    if (bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) < 0) 
+        perror("bind failed. Error"); 
+   
+ 
+    listen(socket_desc, 3);  
+    c = sizeof(struct sockaddr_in); 
+  
+    while (client_sock = accept(socket_desc, (struct sockaddr*)&client, (socklen_t*)&c)){
+
+	    pthread_t mythread;
+	    new_sock = malloc(sizeof *new_sock);
+           *new_sock = client_sock;
+	  
+	    if( pthread_create(&mythread, NULL, socketThread, (void*) new_sock) != 0 )
+           	printf("Failed to create thread\n");
+	    
+    }
+    return 0; 
+} 
+ 
+void *socketThread(void *socket_desc){
+	int client_sock = *(int*)socket_desc;
+    	char client_message[2000];
+
+    //Receive a message from client
+	    while( (recv(client_sock , client_message , 2000 , 0)) > 0 )
+	    {
+		 //Send the message back to client
+		 send(client_sock,"hello client.\n",strlen("hello client.\n"),0);
+		 printf("Message from Client: %s\n",client_message);
+	    }
+	
+	free(socket_desc);
+   	close(client_sock);
+    	pthread_exit(NULL); 
+}
+ELF          >    `      @                  @ 8 	 @         @       @       @       ø      ø                   8      8      8                                                         è	      è	                    ˜      ˜      ˜      x      €                    ¨      ¨      ¨      ð      ð                   T      T      T      D       D              Påtd   |      |      |      D       D              Qåtd                                                  Råtd   ˜      ˜      ˜      h      h             /lib64/ld-linux-x86-64.so.2          GNU                        GNU ½L6"µ¢øl¨§Ü‡º7xÒ<ë?                                                     Z                                                                                         <                      %                                            v                       …                       -   "                    libc.so.6 signal puts getpid printf getchar __cxa_finalize __libc_start_main GLIBC_2.2.5 _ITM_deregisterTMCloneTable __gmon_start__ _ITM_registerTMCloneTable                               ui	   N       ˜             `                                              Ø                    à                    è                    ð         	           ø         
+           °                    ¸                    À                    È                    Ð                    HƒìH‹
+  H…ÀtÿÐHƒÄÃ         ÿ5ª	  ÿ%¬	  @ ÿ%ª	  h    éàÿÿÿÿ%¢	  h   éÐÿÿÿÿ%š	  h   éÀÿÿÿÿ%’	  h   é°ÿÿÿÿ%Š	  h   é ÿÿÿÿ%¢	  f        1íI‰Ñ^H‰âHƒäðPTLÊ  HS  H=ù   ÿV	  ôD  H=y	  UHq	  H9øH‰åtH‹*	  H…Àt]ÿàf.„     ]Ã@ f.„     H=9	  H52	  UH)þH‰åHÁþH‰ðHÁè?HÆHÑþtH‹ñ  H…Àt]ÿàf„     ]Ã@ f.„     €=é   u/Hƒ=Ç   UH‰åtH‹=Ê  èÿÿÿèHÿÿÿÆÁ  ]Ã€    óÃfD  UH‰å]éfÿÿÿUH‰åH=ß   è†þÿÿ]ÃUH‰åèŠþÿÿ‰ÆH=Ó   ¸    è‡þÿÿH5Êÿÿÿ¿   è–þÿÿH=º   èJþÿÿèuþÿÿ¸    ]Ãf.„     @ AWAVI‰×AUATL%¶  UH-¶  SA‰ýI‰öL)åHƒìHÁýèÏýÿÿH…ít 1Û„     L‰úL‰öD‰ïAÿÜHƒÃH9ÝuêHƒÄ[]A\A]A^A_Ãf.„     óÃ  HƒìHƒÄÃ     I got SIGSTOP pid: %d
+ Catching SIGSTOP ;@      týÿÿŒ   Ôýÿÿ´   äýÿÿ\   îþÿÿÌ   ÿÿÿì   Tÿÿÿ  ÄÿÿÿT         zR x      €ýÿÿ+                  zR x  $      àüÿÿ`    FJw€ ?;*3$"       D   ýÿÿ              \   þÿÿ    A†CN      |   þÿÿE    A†C@  D   œ   @þÿÿe    BBŽE B(ŒH0†H8ƒM@r8A0A(B BBB    ä   hþÿÿ                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           `                                  Ð             D             ˜                                                õþÿo    ˜             À             ¸      
+       Ÿ                                           ˜             x                            X             ˜             À       	                            ûÿÿo          þÿÿo    x      ÿÿÿo           ðÿÿo    `      ùÿÿo                                                                                           ¨                                  &      6      F                                                            GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0                                    8                    T                    t                    ˜                    ¸                    À                    `                    x                   	 ˜                   
+ X                    Ð                    ð                    P                    `                    D                    P                    |                    À                    ˜                                         ¨                    ˜                                                                                 ñÿ                                        Ð              !                    7                  F                    m     `              y     ˜              ˜    ñÿ                    ñÿ                ž     ä	                   ñÿ                ¬                     ½     ¨              Æ      ˜              Ù      |              ì     ˜                  @                                   ›                    .    j             9                     K                     _                      D              f                     z                     ™                   ¦                     »                     Ï                      Þ                 ë    P             ú    Ð      e       ¸                   Ÿ    `      +       
+                      }      E                        '                      A  "                       Ð               crtstuff.c deregister_tm_clones __do_global_dtors_aux completed.7697 __do_global_dtors_aux_fini_array_entry frame_dummy __frame_dummy_init_array_entry 13a.c __FRAME_END__ __init_array_end _DYNAMIC __init_array_start __GNU_EH_FRAME_HDR _GLOBAL_OFFSET_TABLE_ __libc_csu_fini _ITM_deregisterTMCloneTable my_handler puts@@GLIBC_2.2.5 getpid@@GLIBC_2.2.5 _edata printf@@GLIBC_2.2.5 __libc_start_main@@GLIBC_2.2.5 __data_start getchar@@GLIBC_2.2.5 signal@@GLIBC_2.2.5 __gmon_start__ __dso_handle _IO_stdin_used __libc_csu_init __bss_start main __TMC_END__ _ITM_registerTMCloneTable __cxa_finalize@@GLIBC_2.2.5  .symtab .strtab .shstrtab .interp .note.ABI-tag .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt .init .plt.got .text .fini .rodata .eh_frame_hdr .eh_frame .init_array .fini_array .dynamic .data .bss .comment                                                                                   8      8                                    #             T      T                                     1             t      t      $                              D   öÿÿo       ˜      ˜                                   N             ¸      ¸                                V             À      À      Ÿ                              ^   ÿÿÿo       `      `                                  k   þÿÿo       x      x                                   z             ˜      ˜      À                            „      B       X      X      x                           Ž             Ð      Ð                                    ‰             ð      ð      `                             ”             P      P                                                `      `      â                             £             D      D      	                              ©             P      P      ,                              ±             |      |      D                              ¿             À      À      (                             É             ˜      ˜                                   Õ                                                        á             ¨      ¨      ð                           ˜             ˜      ˜      h                             ê                                                         ð                                                       õ      0                     +                                                   @      `         +                 	                             ]                                                   ý      þ                              
